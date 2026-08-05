@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take Attendance</title>
+</head>
+
+<body>
+
+<h1>Face Recognition Attendance</h1>
+
+<video id="video" width="640" height="480" autoplay></video>
+
+<br><br>
+
+<button onclick="capturePhoto()">Mark Attendance</button>
+
+<canvas id="canvas" width="640" height="480"
+        style="display:none;"></canvas>
+
+<p id="result"></p>
+
+<script>
+
+const video = document.getElementById("video");
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+})
+.catch(error => {
+    document.getElementById("result").innerText =
+        "Camera error: " + error;
+});
+
+function capturePhoto() {
+
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    context.drawImage(video, 0, 0, 640, 480);
+
+    const image = canvas.toDataURL("image/jpeg");
+
+    fetch("/recognize-face", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            image: image
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("result").innerText =
+            data.message;
+    })
+    .catch(error => {
+        document.getElementById("result").innerText =
+            "Error: " + error;
+    });
+}
+
+</script>
+
+</body>
+</html>
